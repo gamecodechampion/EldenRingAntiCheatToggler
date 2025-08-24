@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections;
+using System.IO;
 
 
 class Program
@@ -6,11 +7,11 @@ class Program
     static string[] validFiles = new string[2];
     static string fileName = "eldenringpath.txt";
     static string filePath;
+    private static string currentPath;
     
     
     static void Main(string[] args)
     {
-        
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Hello! Welcome to GCC\'s Elden Ring anti cheat toggle!\n");
         
@@ -28,24 +29,75 @@ class Program
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Write("Would you like to enable or disable Elden Ring's anti cheat? (1 for on, 2 for off) -> ");
-            string option = Console.ReadLine();
-
-            if (option.Equals("1"))
+            int option = Convert.ToInt32(Console.ReadLine());
+            
+            
+            if (option == 1)
             {
-                EnableAntiCheat();
+                if (!ValidateFiles())
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("The contents of your eldenringpath.txt file seems to be invalid.");
+                    Console.Write("Please re-enter the path that your Elden Ring files are contained in, you will have to restart the program upon doing this -> ");
+                    filePath = Console.ReadLine();
+                    File.WriteAllText(fileName, filePath);
+                }
+                else
+                {
+                    EnableAntiCheat();
+                }
             }
 
-            else if (option.Equals("2"))
+            else if (option == 2)
             {
-                DisableAntiCheat();
+                if (!ValidateFiles())
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("The contents of your eldenringpath.txt file seem to be invalid.");
+                    Console.Write("Please re-enter the path that your Elden Ring files are contained in, you will have to restart the program upon doing this -> ");
+                    filePath = Console.ReadLine();
+                    File.WriteAllText(fileName, filePath);
+                }
+                else
+                {
+                    DisableAntiCheat();
+                }
             }
+        }
+    }
+
+
+    static bool ValidateFiles()
+    {
+        try
+        {
+
+            currentPath = File.ReadAllText(fileName);
+
+            string[] allFiles = Directory.GetFiles(currentPath);
+
+            bool hasStartProtected = allFiles.Any(f => Path.GetFileName(f) == "start_protected_game.exe");
+            bool hasEldenRing = allFiles.Any(f => Path.GetFileName(f) == "eldenring.exe");
+            bool hasStartProtectedOriginal =
+                allFiles.Any(f => Path.GetFileName(f) == "start_protected_game_original.exe");
+
+            bool enabledState = hasStartProtected && hasEldenRing;
+            bool disabledState = hasStartProtected && hasStartProtectedOriginal;
+
+            return enabledState || disabledState;
+        }
+        catch (Exception e)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Validation failed: {e.Message}");
+            return false;
         }
     }
 
 
     static void EnableAntiCheat()
     {
-        string currentPath = File.ReadAllText(fileName);
+        currentPath = File.ReadAllText(fileName);
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("Scanning files in path....");
@@ -92,15 +144,15 @@ class Program
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Couldn't find the required files to rename!");
+            MessageBox.Show("Your anti cheat is already enabled!", "Notice", MessageBoxButtons.OK,
+                MessageBoxIcon.Exclamation);
         }
     }
     
 
     static void DisableAntiCheat()
     {
-        string currentPath = File.ReadAllText(fileName);
+        currentPath = File.ReadAllText(fileName);
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("Scanning files in path....");
@@ -146,8 +198,8 @@ class Program
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Couldn't find the required files to rename!");
+            MessageBox.Show("Your anti cheat is already disabled!", "Notice", MessageBoxButtons.OK,
+                MessageBoxIcon.Exclamation);
         }
     }
 }
